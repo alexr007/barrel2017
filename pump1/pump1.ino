@@ -1,90 +1,137 @@
 #include <Bounce2.h>
 
-int SENSOR_LOW = 2;
-int SENSOR_HIGH = 3;
+int SENSOR_IN_LOW = 2;
+int SENSOR_IN_HIGH = 3;
+int SENSOR_OUT_LOW = 4;
+int SENSOR_OUT_HIGH = 5;
+int VALVE_IN = 6;
+int VALVE_OUT = 7;
+int PUMP_MOTOR = 8;
+int DEBUG = 9;
+int LED = 13;
 
-int PUMP_MOTOR = 6;
-int PUMP_LED = PUMP_MOTOR + 1;
+Bounce sensor_in_low = Bounce(); 
+Bounce sensor_in_high = Bounce(); 
+Bounce sensor_out_low = Bounce(); 
+Bounce sensor_out_high = Bounce(); 
 
-Bounce sensor_low = Bounce(); 
-Bounce sensor_high = Bounce(); 
-
-// pump - tt relay
-// pump + 1 - conventional relay
-void pump_control_on(int pump)
-{
-  	digitalWrite(pump, HIGH); // TT relay
-	delay(50);
-	digitalWrite(pump+1, HIGH); // conventional relay
-	delay(50);
-  	digitalWrite(pump, LOW); // TT relay
-}
-
-void pump_control_off(int pump)
-{
-  	digitalWrite(pump, HIGH); // TT relay
-	delay(50);
-	digitalWrite(pump+1, LOW); // conventional relay
-	delay(50);
-  	digitalWrite(pump, LOW); // TT relay
-}
-
+// pump - solid type relay
 void pump_control(int pump, int operation)
 {
-	digitalWrite(pump, operation);
-	digitalWrite(pump+1, operation);
+  digitalWrite(pump, operation);
+  digitalWrite(LED, operation);
 }
-
-void main_pumpOn() {
-	pump_control(PUMP_MOTOR, HIGH);
-}
-
-void main_pumpOff() {
-	pump_control(PUMP_MOTOR, LOW);
-}
-
-boolean isFull()
+void pump_on()
 {
-  	sensor_high.update();
-	return sensor_high.read() == LOW;
+  pump_control(PUMP_MOTOR, HIGH);
 }
 
-boolean isEmpty()
+void pump_off()
 {
-  	sensor_low.update();
-	return sensor_low.read() == HIGH;
+  pump_control(PUMP_MOTOR, LOW);
 }
-
-void control_main_pump()
+void valve_control(int valve, int operation)
 {
-  	if ( isFull() ) main_pumpOff();
-  	  else if ( isEmpty() ) main_pumpOn();
+  digitalWrite(valve, operation);
 }
-
-
+void valve_in_on()
+{
+  valve_control(VALVE_IN, HIGH);
+}
+void valve_in_off()
+{
+  valve_control(VALVE_IN, LOW);
+}
+void valve_out_on()
+{
+  valve_control(VALVE_OUT, HIGH);
+}
+void valve_out_off()
+{
+  valve_control(VALVE_OUT, LOW);
+}
+boolean inFull()
+{
+  sensor_in_high.update();
+  return sensor_in_high.read() == HIGH; // закорочен на землю
+}
+boolean inEmpty()
+{
+  sensor_in_low.update();
+  return sensor_in_low.read() == LOW; // разомкнут
+}
+boolean outFull()
+{
+  sensor_out_high.update();
+  return sensor_out_high.read() == HIGH; // закорочен на землю
+}
+boolean outEmpty()
+{
+  sensor_out_low.update();
+  return sensor_out_low.read() == LOW; // разомкнут
+}
+void fill_in() {
+  valve_in_on();
+  pump_on();
+}
+void fill_out() {
+  valve_out_on();
+  pump_on();
+}
 void setup()
 {
-	pinMode (SENSOR_LOW, INPUT);
-	pinMode (SENSOR_HIGH, INPUT);
-	digitalWrite(SENSOR_LOW ,HIGH);
-	digitalWrite(SENSOR_HIGH ,HIGH);
-
-        sensor_low.attach(SENSOR_LOW);
-        sensor_low.interval(10);
-
-        sensor_high.attach(SENSOR_HIGH);
-        sensor_high.interval(10);
-
-
-	pinMode (PUMP_MOTOR, OUTPUT);
-	pinMode (PUMP_LED, OUTPUT);
-        
-        main_pumpOff();
-	if ( !isFull() ) main_pumpOn();
+  // датчики уровня бочек
+  pinMode (SENSOR_IN_LOW, INPUT);
+  pinMode (SENSOR_IN_HIGH, INPUT);
+  pinMode (SENSOR_OUT_LOW, INPUT);
+  pinMode (SENSOR_OUT_HIGH, INPUT);
+  // клапаны
+  pinMode (VALVE_IN, OUTPUT);
+  pinMode (VALVE_OUT, OUTPUT);
+  // насос
+  pinMode (PUMP_MOTOR, OUTPUT);
+  // тест
+  pinMode (DEBUG, OUTPUT);
+  // светодиод
+  pinMode (LED, OUTPUT);
+  // подтяжка
+	//digitalWrite(SENSOR_IN_LOW ,HIGH);
+	//digitalWrite(SENSOR_IN_HIGH ,HIGH);
+  //digitalWrite(SENSOR_IN_LOW ,HIGH);
+  //digitalWrite(SENSOR_IN_HIGH ,HIGH);
+  
+  // конфиг классов по удалению дребезга контактов
+  sensor_in_low.attach(SENSOR_IN_LOW);
+  sensor_in_low.interval(10);
+  
+  sensor_in_high.attach(SENSOR_IN_HIGH);
+  sensor_in_high.interval(10);
+  
+  sensor_out_low.attach(SENSOR_OUT_LOW);
+  sensor_out_low.interval(10);
+  
+  sensor_out_high.attach(SENSOR_OUT_HIGH);
+  sensor_out_high.interval(10);
+/*
+  pump_off();
+  if (! inFull()) fill_in();
+  if (! outFull()) fill_out();
+*/  
+  int v = HIGH;
+  digitalWrite(VALVE_IN ,v);
+  digitalWrite(VALVE_OUT ,v);
+  digitalWrite(PUMP_MOTOR ,v);
+  digitalWrite(DEBUG ,v);
 }
 
 void loop()
 {
-	
-	control_main_pump();
+  
+  /*
+  if (inFull() && outFull()) pump_off();
+  if (inFull()) valve_in_off();
+  if (outFull()) valve_out_off();
+  if (inEmpty()) fill_in();
+  if (outEmpty()) fill_out();
+  */
 }
