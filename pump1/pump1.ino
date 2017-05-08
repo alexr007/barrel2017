@@ -22,7 +22,9 @@ Bounce sensor_out_high = Bounce();
 
 // pump - solid type relay
 void pump_control(int pump, int operation) {
+  // реле замыкается LOW
   digitalWrite(pump, operation);
+  // светодиод загорается HIGH
   digitalWrite(LED, !operation);
 }
 void pump_on() {
