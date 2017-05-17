@@ -14,6 +14,8 @@ int ON = LOW;
 int OFF = HIGH;
 int CLOSED = LOW;
 int OPENED = HIGH;
+boolean bFillingIn = false;
+boolean bFillingOut = false;
 
 Bounce sensor_in_low = Bounce(); 
 Bounce sensor_in_high = Bounce(); 
@@ -39,14 +41,16 @@ void valve_control(int valve, int operation) {
 void valve_in_on() {
   valve_control(VALVE_IN, ON);
 }
-void valve_in_off() {
+void stop_in() {
   valve_control(VALVE_IN, OFF);
+  bFillingIn = false;
 }
 void valve_out_on() {
   valve_control(VALVE_OUT, ON);
 }
-void valve_out_off() {
+void stop_out() {
   valve_control(VALVE_OUT, OFF);
+  bFillingOut = false;
 }
 boolean inFull() {
   sensor_in_high.update();
@@ -65,10 +69,12 @@ boolean outEmpty() {
   return sensor_out_low.read() == OPENED; // разомкнут
 }
 void fill_in() {
+    bFillingIn = true;
     valve_in_on();
     pump_on();
 }
 void fill_out() {
+    bFillingOut = true;
     valve_out_on();
     pump_on();
 }
@@ -95,11 +101,11 @@ void setup()
   sensor_out_high.attach(SENSOR_OUT_HIGH);
   sensor_out_high.interval(10);
   // подтяжка железная. резисторы 15К на +3.3V
-
-  // все выключаем
+ 
+   // все выключаем
   pump_off();
-  valve_in_off();
-  valve_out_off();
+  stop_in();
+  stop_out();
   
   // заполняем все если чтото не полное
   if (! inFull()) fill_in();
@@ -108,11 +114,11 @@ void setup()
 
 void loop()
 {
-  // если оба полные - то выключае насос
-  if (inFull() && outFull()) pump_off();
+  // если никакой не в процессе наполнения - то выключае насос
+  if (!bFillingIn && !bFillingOut) pump_off();
   // если какой-то один то только клапан
-  if (inFull()) valve_in_off();
-  if (outFull()) valve_out_off();
+  if (bFillingIn && inFull()) stop_in();
+  if (bFillingOut && outFull()) stop_out();
   // если какой-то бак пуст - то включаем и насос и клапан
   if (inEmpty()) fill_in();
   if (outEmpty()) fill_out();
