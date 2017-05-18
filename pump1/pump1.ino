@@ -14,8 +14,8 @@ int ON = LOW;
 int OFF = HIGH;
 int CLOSED = LOW;
 int OPENED = HIGH;
-boolean bFillingIn = false;
-boolean bFillingOut = false;
+boolean bFillingIn;
+boolean bFillingOut;
 
 Bounce sensor_in_low = Bounce(); 
 Bounce sensor_in_high = Bounce(); 
@@ -116,9 +116,11 @@ void loop()
 {
   // если никакой не в процессе наполнения - то выключае насос
   if (!bFillingIn && !bFillingOut) pump_off();
+  
   // если какой-то один то только клапан
   if (bFillingIn && inFull()) stop_in();
   if (bFillingOut && outFull()) stop_out();
+  
   // если какой-то бак пуст - то включаем и насос и клапан
   if (inEmpty()) fill_in();
   if (outEmpty()) fill_out();
