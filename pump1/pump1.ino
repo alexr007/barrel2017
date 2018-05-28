@@ -164,6 +164,5 @@ void loop() {
   if (inEmpty()) fill_in();
   if (outEmpty()) fill_out();
 
-
   delay(300);
 }
