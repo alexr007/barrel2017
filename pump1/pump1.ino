@@ -159,7 +159,6 @@ void loop() {
   if (bFillingIn && inFull()) stop_in();
   if (bFillingOut && outFull()) stop_out();
   if (!bFillingIn && !bFillingOut) pump_off();
-
   
   // if someone barrel is empty - we switch on corresponding pump and valve
   if (inEmpty()) fill_in();
